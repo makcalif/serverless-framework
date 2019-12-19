@@ -59,11 +59,24 @@ provider:
 #    - exclude-me.js
 #    - exclude-me-dir/**
 
+# functions:
+#   hello:
+#     handler: handler.hello
+#     memorySize: 128
+#   greet:
+#     handler: greeter.greet
+#     memorySize: 128
+# activity: 
+#   name: mkactivity
+
 functions:
-  hello:
-    handler: handler.hello
-  greet:
-    handler: greeter.greet
+  approval:
+    handler: approval.check
+    memorySize: 128
+  continue:
+    handler: continue.handler
+    memorySize: 128
+  
 
 stepFunctions:
   stateMachines:
@@ -75,36 +88,16 @@ stepFunctions:
             method: GET
       definition:
         Comment: "A Hello World example of the Amazon States Language using an AWS Lambda Function"
-        StartAt: HelloWorld1
+        StartAt: getGreeting
+        TimeoutSeconds: 300
         States:
-          HelloWorld1:
+          getGreeting:
             Type: Task
-            Resource:
-              Fn::GetAtt: [hello, Arn]
-            Next: ChoiceState 
-          ChoiceState:
-            Type: Choice
-            Choices:
-              - Variable: $.input.hello.name
-                StringEquals: 'Khan'
-                Next: WaitState
-              - Variable: $.input.hello.success
-                BooleanEquals: true
-                Next: SucceedState
-            Default: FailedState            
-          WaitState:
-            Type: Wait
-            Seconds: 5
-            Next: Greeting
-          Greeting:
-            Type: Task
-            Resource:  
-              Fn::GetAtt: [greet, Arn]
-            End: true
-          SucceedState:
-            Type: Succeed
-          FailedState:
-            Type: Fail
+            Resource: arn:aws:states:us-east-1:287758680514:activity:get-greeting
+            TimeoutSeconds: 3600
+            #HeartbeatInSeconds: 3600
+            End: true 
+  validate: true 
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
