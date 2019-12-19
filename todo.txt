@@ -1,0 +1,1 @@
+create 'Activity' from serverless.yaml instead of manually creating
