@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: mk-state-func
+service: transcribe
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -70,32 +70,46 @@ provider:
 #   name: mkactivity
 
 functions:
-  approval:
-    handler: approval.check
+  dummyTranscribe:
+    handler: dummyTranscribe.handle
+    memorySize: 128  
+  submitTranscribe:
+    handler: submitTranscribe.submit
+    memorySize: 128   
+  poller:
+    handler: poller.poll
     memorySize: 128
-  continue:
-    handler: continue.handler
+  resume:
+    handler: resumer.resume
     memorySize: 128
   
 
 stepFunctions:
   stateMachines:
-    hellostepfunc1:
-      name: hellostepfunc1-${self:service}-${opt:stage}
+    step-func:
+      name: step-func-${self:service}-${opt:stage}
       events:
         - http:
             path: gofunction
             method: GET
       definition:
-        Comment: "A Hello World example of the Amazon States Language using an AWS Lambda Function"
-        StartAt: getGreeting
+        Comment: "Transcribe and then resume via cloudwatch"
+        StartAt: submitTranscribe
         TimeoutSeconds: 300
         States:
-          getGreeting:
+          submitTranscribe:
             Type: Task
-            Resource: arn:aws:states:us-east-1:287758680514:activity:get-greeting
+            Resource:
+              Fn::GetAtt: [submitTranscribe, Arn] 
+            Next: waitForTranscribe 
+          waitForTranscribe:
+            Type: Task
+            Resource: arn:aws:states:us-east-1:287758680514:activity:is-transcribe-complete
             TimeoutSeconds: 3600
             #HeartbeatInSeconds: 3600
+            Next: processText 
+          processText:
+            Type: Pass 
             End: true 
   validate: true 
 

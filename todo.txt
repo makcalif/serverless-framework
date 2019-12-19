@@ -1,1 +1,11 @@
 create 'Activity' from serverless.yaml instead of manually creating
+
+AWS Step Functions has a hard limit of 25,000 entries in the execution history. To avoid reaching this limit for long-running executions, implement a pattern that uses an AWS Lambda function that can start a new execution of your state machine to split ongoing work across multiple workflow executions.
+
+Executions that pass large payloads of data between states can be terminated. If the data you are passing between states might grow to over 32 KB, use Amazon Simple Storage Service (Amazon S3) to store the data, and pass the Amazon Resource Name (ARN) instead of the raw data. Alternatively, adjust your implementation so that you pass smaller payloads in your executions.
+
+https://docs.aws.amazon.com/step-functions/latest/dg/bp-activity-pollers.html
+
+Implement your pollers as separate threads from the work in your activity worker implementation.
+
+Have at least 100 open polls per activity ARN at each point in time

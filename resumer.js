@@ -3,13 +3,13 @@ console.log('Loading function');
 const aws = require('aws-sdk');
 const stepfunctions = new aws.StepFunctions();
 
-exports.handler = (event, context, callback) => {
+exports.resume = (event, context, callback) => {
     console.log("event:" + JSON.stringify(event));
     
     console.log("prep task param");
   var taskParams = {
     output: JSON.stringify({
-        "MK": "DUMMY"
+        mk : "dummy"
       }),
     taskToken: event.taskToken
    };
