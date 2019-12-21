@@ -9,3 +9,44 @@ https://docs.aws.amazon.com/step-functions/latest/dg/bp-activity-pollers.html
 Implement your pollers as separate threads from the work in your activity worker implementation.
 
 Have at least 100 open polls per activity ARN at each point in time
+ 
+ ---------------------------
+
+ START RequestId: b3171ea7-667c-4743-9af8-28cfb93ecdc2 Version: $LATEST
+2019-12-20T05:55:20.070Z	b3171ea7-667c-4743-9af8-28cfb93ecdc2	INFO	Success!2019-12-20T05:55:20.070Z	b3171ea7-667c-4743-9af8-28cfb93ecdc2	INFO	{
+  TranscriptionJob: {
+    TranscriptionJobName: 'lambda2',
+    TranscriptionJobStatus: 'IN_PROGRESS',
+    LanguageCode: 'en-US',
+    MediaSampleRateHertz: 44100,
+    MediaFormat: 'mp3',
+    Media: { MediaFileUri: 's3://mk-transcribe/recording-cc.mp3' },
+    CreationTime: 2019-12-20T05:55:20.000Z
+  }
+}END RequestId: b3171ea7-667c-4743-9af8-28cfb93ecdc2
+REPORT RequestId: b3171ea7-667c-4743-9af8-28cfb93ecdc2	Duration: 436.97 ms	Billed Duration: 500 ms	Memory Size: 128 MB	Max Memory Used: 93 MB	
+
+
+{
+    "version": "0",
+    "id": "4955be87-1bb9-bfed-3a71-7155c25d29a5",
+    "detail-type": "Transcribe Job State Change",
+    "source": "aws.transcribe",
+    "account": "287758680514",
+    "time": "2019-12-20T05:56:35Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "TranscriptionJobName": "lambda2",
+        "TranscriptionJobStatus": "COMPLETED"
+    }
+}
+
+
+    jobname = id_generator()
+
+    # Extract the bucket and key from the downloadPodcast lambda function
+    bucket = event['audioS3Location']['bucket']
+    key = event['audioS3Location']['key']
+
+    content_type = event['audio_type']

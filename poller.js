@@ -2,10 +2,10 @@
 console.log('Loading function');
 const aws = require('aws-sdk');
 const stepfunctions = new aws.StepFunctions();
-exports.check = (event, context, callback) => {
-    
+exports.poll = (event, context, callback) => {
+    console.log('event:' + JSON.stringify(event));
     var taskParams = {
-        activityArn: 'arn:aws:states:us-east-1:287758680514:activity:get-greeting'
+        activityArn: 'arn:aws:states:us-east-1:287758680514:activity:is-transcribe-complete'
     };
     
     stepfunctions.getActivityTask(taskParams, function(err, data) {
