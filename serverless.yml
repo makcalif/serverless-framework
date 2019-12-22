@@ -70,20 +70,15 @@ provider:
 #   name: mkactivity
 
 functions:
-  dummyTranscribe:
-    handler: dummyTranscribe.handle
-    memorySize: 128  
   submitTranscribe:
-    handler: submitTranscribe.submit
+    handler: transcribe.submit
     memorySize: 128   
-  poller:
-    handler: poller.poll
+  checkTranscribeStatus:
+    handler: transcribe.check
     memorySize: 128
-  resume:
-    handler: resumer.resume
+  processTranscript:
+    handler: transcribe.process
     memorySize: 128
-  
-
 stepFunctions:
   stateMachines:
     step-func:
@@ -98,19 +93,39 @@ stepFunctions:
         TimeoutSeconds: 300
         States:
           submitTranscribe:
+            InputPath: "$"
+            ResultPath: "$.transcribe"
             Type: Task
             Resource:
               Fn::GetAtt: [submitTranscribe, Arn] 
-            Next: waitForTranscribe 
-          waitForTranscribe:
+            Next: checkTranscribe 
+          checkTranscribe:
             Type: Task
-            Resource: arn:aws:states:us-east-1:287758680514:activity:is-transcribe-complete
-            TimeoutSeconds: 3600
-            #HeartbeatInSeconds: 3600
-            Next: processText 
+            InputPath: "$.transcribe"
+            ResultPath: "$.transcribeStatus"
+            Resource: 
+              Fn::GetAtt: [checkTranscribeStatus, Arn] 
+            Next: isTranscribeComplete 
+          waitForTranscribe:
+            Type: Wait
+            Seconds: 20
+            Next: checkTranscribe   
+          isTranscribeComplete:
+            Type: Choice
+            Choices:
+              - Variable: "$.transcribeStatus.status"
+                StringEquals: "COMPLETED"
+                Next: processText
+              - Variable: "$.transcribeStatus.count"
+                NumericGreaterThan: 5
+                Next: processText
+            Default: waitForTranscribe 
           processText:
             Type: Pass 
-            End: true 
+            End: true
+          # veryLast:
+          #   Type: Pass 
+          #   End: true 
   validate: true 
 
 #    The following are a few example events you can configure
