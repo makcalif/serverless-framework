@@ -1,0 +1,37 @@
+
+----------------- dynamic flow story
+
+  file uploaded to s3
+  transcribe -> text
+  redact  -> xxx in text
+    optionally add machine learning step
+  transcode  -> mp3 redacted
+
+ 
+  
+  file uploaded to s3
+  transcribe -> text
+  transcode  -> mp3 un-redacted
+  redact     -> xxx in text
+
+  demo changes needed to achieve a variation of existing state machine!
+
+  what are more specific requirements for flexibile architecture ?
+
+  Is transcode reusable? with / without redaction?
+
+  How 2 customers can use 2 diff state machines?
+
+  How would you do it without step funcs?
+
+  step func just eliminates SQS .. what else? input / output control?
+
+  verify if it really eliminates SQS
+
+  can express workflow be used to achieve dynamic behaviour
+    standard parent calls an express child??
+
+  can a complex state machine be created with few lines of code
+
+  very complex workflows can be created (show state machine graph). Question is can our workflow fit into
+  small steps ?

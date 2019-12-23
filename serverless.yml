@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: transcribe
+service: step-with-error
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -30,21 +30,27 @@ provider:
 #  stage: dev
 #  region: us-east-1
 
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
+#you can add statements to the Lambda function's IAM Role here
+iamRoleStatements:
+   - Effect: "Allow"
+     Action:
+       - "s3:ListBucket"
+     Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+   - Effect: "Allow"
+     Action:
+       - "s3:PutObject"
+     Resource:
+       Fn::Join:
+         - ""
+         - - "arn:aws:s3:::"
+           - "Ref" : "ServerlessDeploymentBucket"
+           - "/*"
+   - Effect: "Allow"
+     Action: 
+       - "transcribe:GetTranscriptionJob"
+       - "transcribe:StartTranscriptionJob"
+     Resource:
+         "*"
 
 # you can define service wide environment variables here
 #  environment:
@@ -58,16 +64,6 @@ provider:
 #  exclude:
 #    - exclude-me.js
 #    - exclude-me-dir/**
-
-# functions:
-#   hello:
-#     handler: handler.hello
-#     memorySize: 128
-#   greet:
-#     handler: greeter.greet
-#     memorySize: 128
-# activity: 
-#   name: mkactivity
 
 functions:
   submitTranscribe:
@@ -83,12 +79,8 @@ stepFunctions:
   stateMachines:
     step-func:
       name: step-func-${self:service}-${opt:stage}
-      events:
-        - http:
-            path: gofunction
-            method: GET
       definition:
-        Comment: "Transcribe and then resume via cloudwatch"
+        Comment: "Transcribe with error handling"
         StartAt: submitTranscribe
         TimeoutSeconds: 300
         States:
@@ -98,7 +90,25 @@ stepFunctions:
             Type: Task
             Resource:
               Fn::GetAtt: [submitTranscribe, Arn] 
-            Next: checkTranscribe 
+            Retry:
+            - ErrorEquals:
+              - CustomErrorTranscribeFailed
+              IntervalSeconds: 10
+              MaxAttempts: 2
+              BackoffRate: 1
+            - ErrorEquals:
+              - States.TaskFailed
+              IntervalSeconds: 10
+              MaxAttempts: 1
+              BackoffRate: 1
+            Catch:
+            - ErrorEquals:
+              - CustomErrorTranscribeFailed
+              Next: handledError
+            - ErrorEquals:
+              - States.TaskFailed
+              Next: taskFailed
+            Next: checkTranscribe             
           checkTranscribe:
             Type: Task
             InputPath: "$.transcribe"
@@ -123,9 +133,12 @@ stepFunctions:
           processText:
             Type: Pass 
             End: true
-          # veryLast:
-          #   Type: Pass 
-          #   End: true 
+          handledError:
+            Type: Pass 
+            End: true 
+          taskFailed:
+            Type: Pass 
+            End: true 
   validate: true 
 
 #    The following are a few example events you can configure
